@@ -1,0 +1,47 @@
+# ==========================================
+# AgentLab: Run Records (Data Privacy)
+# ==========================================
+# Exclude all local test run records and results
+runs/
+
+# ==========================================
+# Environment Variables & Secrets (Security)
+# ==========================================
+# Never commit real API keys, passwords, or secrets
+.env
+.env.*
+*.env
+!.env.example
+
+# ==========================================
+# Python Bytecode & Cache
+# ==========================================
+# Compiled Python files and cache generated during execution
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+# Local Python environments (should not be tracked in Git)
+.venv/
+venv/
+env/
+ENV/
+
+# ==========================================
+# Testing & Coverage Artifacts
+# ==========================================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ==========================================
+# IDE & Operating System Artifacts
+# ==========================================
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
