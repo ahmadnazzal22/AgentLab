@@ -2,7 +2,7 @@
 
 This is the **living to-do list** of AgentLab. It changes as the project grows and as you complete new courses.
 
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-05
 
 ## Legend
 
@@ -32,10 +32,7 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 
 ## 3. Current focus
 
-**All five architectural decisions for M1 have been approved and documented.**
-Before starting M1 code implementation:
-1. Complete remaining M0 owner actions (Git identity configuration and first commit).
-2. Wait for explicit approval to begin M1 code implementation.
+**M1 provisionally complete (code/tests):** Core data models (`Scenario`, `Event`, `Run`, `Score`, `Result`) and basic configuration handling (`Config`, `load_config`) implemented in `src/agentlab/core/` with automated unit tests (86 passing tests). M1 implementation work completed in three internal phases (core models, config hardening, documentation/housekeeping). Claude performed an independent review: **code and tests approved with minor notes; documentation review returned NOT APPROVED** (corrections in progress). M1 is not formally closed.
 
 ---
 
@@ -52,19 +49,19 @@ Before starting M1 code implementation:
 - [x] Write `docs/security-and-privacy.md`, `docs/GLOSSARY.md`, `docs/learning-log.md`
 - [x] Record first decision (Python as primary language)
 - [x] Add `.gitignore`
-- [x] Initialize Git on `main` (**no commits yet**)
-- [ ] Configure your Git identity (`user.name`, `user.email`) *(owner action)*
-- [ ] Make the first commit *(after identity is configured, with your approval)*
+- [x] Initialize Git on `main`
+- [x] Configure your Git identity (`user.name`, `user.email`)
+- [x] Make the first commit (`0472d26`)
 
-### M1: Core models and configuration `[PLANNED]`
+### M1: Core models and configuration `[IN PROGRESS]`
 - [x] Decide scenario and result file format (JSON chosen)
 - [x] Decide how agents plug in (Subprocess via JSON stdin/stdout chosen; Sandbox enforces security)
 - [x] Decide configuration format (JSON with safe defaults in code chosen)
 - [x] Choose test approach (Python built-in unittest framework chosen)
 - [x] Decide run records storage and retention (local runs/ as JSON, Git-excluded, manual deletion, synthetic data, redaction)
-- [ ] Define Scenario, Run, Event, Result, Score shapes in `core/`
-- [ ] Basic configuration handling implementation
-- [ ] Add first tests in `tests/`
+- [x] Define Scenario, Run, Event, Result, Score shapes in `core/`
+- [x] Basic configuration handling implementation
+- [x] Add first tests in `tests/`
 - **Course unlock:** TBD
 
 ### M2: Basic runner and task-completion evaluation `[PLANNED]`
@@ -73,6 +70,12 @@ Before starting M1 code implementation:
 - [ ] First scenario in `scenarios/task_completion/`
 - [ ] First evaluator (task completion) in `evaluators/`
 - [ ] First plain-text report in `reporting/`
+- **M2 prerequisites (from Claude's M1 code review):** Five findings identified as prerequisites/gates for M2. Documented as **future requirements**; do not implement code changes for these in this documentation update. Address/verify before or as part of M2 implementation as directed by review.
+  - [ ] **1. Identifier Policy:** Tighten `validate_identifier` to require an alphanumeric start, reject trailing dots, reject Windows reserved names (e.g., `CON`, `NUL`, `COM1`), and define a policy preventing case-only duplicates.
+  - [ ] **2. Config.runs_dir Constraints:** Reject absolute paths, drive-letter paths, `..`, and NUL characters in settings. When writing, verify the resolved path remains within the storage directory using `resolve()` and `is_relative_to()`.
+  - [ ] **3. JSON Compatibility Validation:** Validate that custom data is JSON-compatible: string keys, supported values, finite decimal numbers, no `set` or unsupported objects, with a depth limit.
+  - [ ] **4. from_dict Error Contract:** Validate input type and normalize invalid-data errors to `ValueError` with a clear message identifying the field/problem.
+  - [ ] **5. Unknown-key Rejection:** Reject unknown keys in `load_config` and `from_dict` instead of ignoring them, with clear errors.
 - **Course unlock:** TBD
 
 ### M3: Tool selection and execution `[PLANNED]`

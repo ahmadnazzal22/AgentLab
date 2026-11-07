@@ -2,8 +2,7 @@
 
 **An AI Agent Testing and Evaluation Platform.**
 
-> **Status: early planning.** The folder structure and documentation exist.
-> **No application logic has been written yet.** Nothing described as "planned" below works today.
+> **Status: M1 provisionally complete (code/tests).** Core data models and configuration are implemented in `src/agentlab/core/`. Most features remain planned. Documentation corrections are in progress following independent review.
 
 ---
 
@@ -45,8 +44,9 @@ We are strict about honesty. Every feature is labelled:
 |------|--------|
 | Folder structure | `[IMPLEMENTED]` |
 | Project documentation (README, CLAUDE, PROJECT_PLAN, ARCHITECTURE, TASKS) | `[IMPLEMENTED]` |
-| Git repository (initialized, no commits yet) | `[IMPLEMENTED]` |
-| Any application code or evaluation feature | `[PLANNED]` |
+| Git repository (initialized with commits, remote configured) | `[IMPLEMENTED]` |
+| Core data models (`Scenario`, `Event`, `Run`, `Score`, `Result`) and config (`Config`, `load_config`) | `[IMPLEMENTED]` |
+| Runner, sandbox, tools, MCP, evaluators, safety, metrics, reporting | `[PLANNED]` |
 
 ## 5. How it is intended to work (high level)
 
@@ -57,11 +57,11 @@ Scenario  ->  Runner  ->  Sandbox + Agent  ->  Evaluators  ->  Report
                        Metrics (time, tokens, cost)
 ```
 
-Full details are in [ARCHITECTURE.md](ARCHITECTURE.md). All of it is a **proposal**.
+Full details are in [ARCHITECTURE.md](ARCHITECTURE.md). Core is implemented; other components are proposed/planned.
 
 ## 6. Project structure
 
-Every folder also contains its own `README.md` explaining its purpose.
+Some folders contain their own `README.md` explaining their purpose (where created). The structure below shows the intended/planned layout; not all directories exist yet.
 
 ```
 agentlab/
@@ -72,16 +72,16 @@ agentlab/
 ├── TASKS.md              Milestones and checklists (the "to-do list").
 ├── .gitignore            Tells Git which files to never track (secrets, caches).
 │
-├── src/agentlab/         The application code (currently empty of logic).
-│   ├── core/             Shared building blocks (data shapes used everywhere).
-│   ├── runner/           Runs an agent through a scenario.
-│   ├── sandbox/          The controlled, restricted environment.
-│   ├── tools/            Fake/mock tools the agent can use during tests.
-│   ├── mcp/              MCP integration and permission checks.
-│   ├── evaluators/       The "judges" that score agent behavior.
-│   ├── safety/           Human-approval gates and safety controls.
-│   ├── metrics/          Latency, token usage, and cost tracking.
-│   └── reporting/        Turns results into readable reports.
+├── src/agentlab/         The application code (core implemented; other modules planned).
+│   ├── core/             Shared building blocks (data shapes and config) `[IMPLEMENTED]`
+│   ├── runner/           Runs an agent through a scenario. `[PLANNED]`
+│   ├── sandbox/          The controlled, restricted environment. `[PLANNED]`
+│   ├── tools/            Fake/mock tools the agent can use during tests. `[PLANNED]`
+│   ├── mcp/              MCP integration and permission checks. `[PLANNED]`
+│   ├── evaluators/       The "judges" that score agent behavior. `[PLANNED]`
+│   ├── safety/           Human-approval gates and safety controls. `[PLANNED]`
+│   ├── metrics/          Latency, token usage, and cost tracking. `[PLANNED]`
+│   └── reporting/        Turns results into readable reports. `[PLANNED]`
 │
 ├── scenarios/            Test cases, kept as data (not code).
 │   ├── task_completion/
@@ -99,22 +99,23 @@ agentlab/
 
 ## 7. Getting started
 
-There is **nothing to run yet**. To look around:
+Core models and configuration can be imported from `agentlab.core`. Most functionality is not yet runnable. To look around:
 
 1. Read this README, then [PROJECT_PLAN.md](PROJECT_PLAN.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 2. Check [TASKS.md](TASKS.md) to see what is done and what is next.
 3. Read [docs/GLOSSARY.md](docs/GLOSSARY.md) whenever a term is unfamiliar.
 
-Requirements will be added here as code is written. The primary language is **Python 3.12**. No third-party dependencies have been added.
+Requirements will be added here as code is written. The primary language is **Python** (minimum **3.11+**, tested in a Python 3.12 environment; uses `StrEnum` and modern type syntax). No third-party dependencies have been added.
 
 ## 8. Security and privacy, from day one
 
 AgentLab runs AI agents and may handle sensitive data, so safety is part of the design, not an afterthought:
 
-- Test agents run in a **sandbox** with the least access they need.
-- **No real secrets** (API keys, passwords) are ever stored in the repository.
+- Test agents are **planned** to run in a sandbox with the least access they need.
+- **No real secrets** (API keys, passwords) are ever stored in the repository. `Config.to_dict()` excludes `api_key` and it is hidden from `repr`, but this is not complete protection (e.g., `dataclasses.asdict()` and `pickle` can still expose fields). The config loader performs best-effort key-name scanning for secrets in JSON files; it does not detect all possible secret formats.
 - Test data must be **synthetic** (fake), never real personal data.
-- Risky actions require **human approval** by design.
+- Risky actions are **planned** to require human approval by design.
+- **Redaction** of sensitive values in logs/reports is **planned**, not implemented.
 
 Details: [docs/security-and-privacy.md](docs/security-and-privacy.md).
 
@@ -136,7 +137,7 @@ How each course informs the project is tracked in [docs/learning-log.md](docs/le
 |------|-----------------------------|
 | [README.md](README.md) | Understand what AgentLab is |
 | [PROJECT_PLAN.md](PROJECT_PLAN.md) | See the long-term roadmap |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | See how the system is proposed to work |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | See how the system works (implemented and planned) |
 | [TASKS.md](TASKS.md) | See what to work on next |
 | [CLAUDE.md](CLAUDE.md) | See the rules Claude Code follows here |
 | [docs/security-and-privacy.md](docs/security-and-privacy.md) | Understand safety rules |

@@ -18,9 +18,9 @@ It tells Claude **what this project is** and **how to behave while working on it
   5. Reliability and error handling
   6. Performance, latency, and cost
   7. Human approval and safety controls
-- **Primary language:** Python 3.12
+- **Primary language:** Python (minimum **3.11+**, tested in a Python 3.12 environment)
 - **Owner's learning path:** The project grows incrementally as the owner completes Anthropic Claude Academy courses. Completed so far: *Claude Code 101*, *AI Capabilities and Limitations*, *AI Fluency: Framework and Foundations*.
-- **Current state:** Documentation and folder structure only. **No application logic exists.** See `TASKS.md` for the authoritative status.
+- **Current state:** M1 provisionally complete (code/tests). Core data models and configuration implemented in `src/agentlab/core/` with tests. Documentation corrections in progress. See `TASKS.md` for the authoritative status.
 
 ## 2. Core working rules
 
@@ -41,7 +41,7 @@ It tells Claude **what this project is** and **how to behave while working on it
 
 ## 4. Coding conventions (apply once code is written)
 
-- Python 3.12. Use type hints on public functions and classes.
+- Python 3.11+ minimum (tested in 3.12). Use type hints on public functions and classes.
 - Write a short docstring for every module, class, and public function, in plain language.
 - Prefer clear names and small functions over clever code.
 - Add tests in `tests/` for every piece of new logic.
@@ -61,14 +61,14 @@ It tells Claude **what this project is** and **how to behave while working on it
 ## 6. Privacy rules
 
 - Use **synthetic (fake) data only** in scenarios and examples. No real names, emails, phone numbers, or documents.
-- **Redact** sensitive values (keys, personal data) from logs and reports.
+- **Redact** sensitive values (keys, personal data) from logs and reports where implemented. (Redaction is **planned**, not yet implemented.)
 - Store only the run data needed for evaluation. Define retention before storing anything long-term.
 - Do not send repository content to third-party services unless the owner approves.
 
 ## 7. Git rules
 
-- The repository is initialized on the `main` branch.
-- **Do not create commits** until the owner confirms their Git identity (`user.name` and `user.email`) is configured. Ask before the first commit.
+- The repository is initialized on the `main` branch with commits and a configured remote (as of current state).
+- Git identity (`user.name` and `user.email`) should be confirmed/configured before making commits. If identity is not confirmed, ask the owner before committing.
 - Never push to a remote without explicit approval.
 - Never commit `.env`, credentials, large generated outputs, or caches (see `.gitignore`).
 - When commits are allowed: small commits, clear messages describing *what* and *why*.

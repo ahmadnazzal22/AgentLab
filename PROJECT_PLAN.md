@@ -1,7 +1,7 @@
 # PROJECT_PLAN.md: Long-Term Roadmap
 
-> **Status of this document:** A plan, not a record of finished work.
-> Only Phase 0 has been done. Everything else is `[PLANNED]` and may change as you learn more.
+> **Status of this document:** A plan with some work in progress.
+> Phase 0 done. Phase 1 (core models and configuration) is provisionally complete in code/tests (documentation corrections in progress). Everything else is `[PLANNED]` and may change as you learn more.
 
 ---
 
@@ -58,9 +58,9 @@ Each phase has a goal, what it delivers, and what must come first. Course unlock
 - **Delivers:** Folder structure, core documentation, Git initialized, security/privacy principles written down.
 - **Not included:** Any application logic.
 
-### Phase 1: Core models and configuration `[PLANNED]`
+### Phase 1: Core models and configuration `[IN PROGRESS]` (code/tests provisionally complete; docs under correction)
 - **Goal:** Define the shared vocabulary of the system.
-- **Delivers:** Clear data shapes for a Scenario, a Run, an Event (something the agent did), a Result, and a Score; basic configuration handling.
+- **Delivers:** Clear data shapes for a Scenario, a Run, an Event (something the agent did), a Result, and a Score; basic configuration handling with security hardening.
 - **Depends on:** Phase 0.
 - **Course unlock:** TBD
 

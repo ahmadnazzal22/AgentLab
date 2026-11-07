@@ -2,7 +2,7 @@
 # AgentLab: Run Records (Data Privacy)
 # ==========================================
 # Exclude all local test run records and results
-runs/
+/runs/
 
 # ==========================================
 # Environment Variables & Secrets (Security)
@@ -12,6 +12,10 @@ runs/
 .env.*
 *.env
 !.env.example
+*.key
+*.pem
+secrets/
+credentials*.json
 
 # ==========================================
 # Python Bytecode & Cache
@@ -36,6 +40,7 @@ ENV/
 .coverage
 htmlcov/
 .pytest_cache/
+*.log
 
 # ==========================================
 # IDE & Operating System Artifacts

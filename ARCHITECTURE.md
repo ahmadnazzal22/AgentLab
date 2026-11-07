@@ -1,7 +1,7 @@
-# ARCHITECTURE.md: Proposed System Architecture
+# ARCHITECTURE.md: System Architecture
 
-> **Everything in this document is a PROPOSAL (`[PLANNED]`).**
-> No component below exists in code yet. Names and designs may change as the project and your learning evolve.
+> **Core models and configuration are implemented (`[IMPLEMENTED]`).**
+> Other components below are proposals/designs (`[PLANNED]`) unless marked otherwise. Names and designs may change as the project and your learning evolve.
 
 ---
 
@@ -39,20 +39,21 @@ AgentLab runs an **agent under test** through a **scenario** inside a **sandbox*
             +-------------+                          +---------------+
 ```
 
-**Key idea:** *running* and *scoring* are separate. The runner produces a **Run Record**. Evaluators only read that record. This means you can add new evaluators later and re-score old runs without re-running anything.
+**Key idea:** *running* and *scoring* are separate. The runner produces a **Run Record** (implemented as the `Run` model in `core/`). Evaluators only read that record. This means you can add new evaluators later and re-score old runs without re-running anything.
 
 ## 2. Components
 
-Each component maps to a folder in `src/agentlab/`. Status for all: `[PLANNED]`.
+Each component maps to a folder in `src/agentlab/`. Status is noted per component (`[IMPLEMENTED]`, `[IN PROGRESS]`, or `[PLANNED]`).
 
-### 2.1 `core/`: shared building blocks
+### 2.1 `core/`: shared building blocks `[IMPLEMENTED]`
 - **Job:** Define the common "shapes" of data used across the system.
-- **Proposed contents (names not final):**
-  - **Scenario**: what to test (task, allowed tools, expected outcome).
-  - **Run**: one execution of an agent on a scenario.
-  - **Event**: one thing that happened (agent message, tool call, tool result, approval request).
-  - **Result / Score**: the outcome of an evaluator.
-  - **Config**: settings, limits, and paths.
+- **Implemented contents (matches `agentlab.core`):**
+  - **Scenario**: test specification with `id`, `name`, `description`, `task`, `allowed_tools`, `max_steps`, `timeout_seconds`, and `metadata` (arbitrary JSON-compatible data; e.g., expected outputs can be stored in metadata by convention). Includes strict validation and defensive copying.
+  - **Event**: atomic interaction record with `id`, `timestamp` (timezone-aware ISO 8601), `type` (`EventType`), `content`, and `metadata`.
+  - **Run**: execution record (the "Run Record") with `id`, `scenario_id`, `agent_id`, `started_at`, `ended_at`, `status` (`RunStatus`), `scenario_snapshot`, `events`, and `metadata`. Supports `create()` and `add_event()`.
+  - **Score**: evaluator assessment with `evaluator_name`, `passed`, `value` (0-1), `reason`, `evidence_event_ids`, and `metadata`.
+  - **Result**: aggregated outcome with `id`, `run_id`, `scenario_id`, `created_at`, `scores`, `metrics`, and computed `overall_passed`.
+  - **Config**: settings/limits with fields like `runs_dir`, `scenarios_dir`, timeout/step defaults and limits, `log_level`, `environment`, `api_key` (loaded from `AGENTLAB_API_KEY` env only; hidden from `repr` and excluded from `to_dict()`), and `metadata`. `load_config()` supports JSON files with best-effort secret key-name scanning and validation. **Limitations:** scanner is best-effort (not all secret formats detected); `dataclasses.asdict()` and `pickle` can still expose `api_key`.
 - **Rule:** `core/` depends on nothing else in the project. Everything else may depend on `core/`.
 
 ### 2.2 `runner/`: the test driver
@@ -90,8 +91,8 @@ Each component maps to a folder in `src/agentlab/`. Status for all: `[PLANNED]`.
 ### 2.8 `metrics/`: performance and cost
 - **Job:** Measure time (latency), token usage, and estimated cost per run and per step.
 
-### 2.9 `reporting/`: readable results
-- **Job:** Turn scores and metrics into reports a human can read (plain text/Markdown first). Must **redact** sensitive values.
+### 2.9 `reporting/`: readable results `[PLANNED]`
+- **Job:** Turn scores and metrics into reports a human can read (plain text/Markdown first). Sensitive-value **redaction is planned** (not implemented).
 
 ### 2.10 Outside `src/`
 | Folder | Role |
@@ -134,12 +135,12 @@ Imagine a future test: *"Summarize this document, but the document secretly cont
 |---------|-------------------|
 | Agents doing real harm | Sandbox + mock tools; no real accounts or systems. |
 | Secrets exposure | Secrets only via environment variables; never stored in files, logs, or scenarios. |
-| Privacy | Synthetic data only; redact sensitive values in logs and reports. |
+| Privacy | Synthetic data only; redaction of sensitive values in logs and reports is **planned** (not implemented). |
 | Over-broad permissions | Per-scenario allow-lists; MCP permission checks. |
 | Prompt injection | Dedicated hostile-content scenarios; all tool/data output treated as untrusted. |
 | Runaway cost or loops | Limits on steps, time, and spend per run. |
 | Risky actions | Human-approval gates in `safety/`. |
-| Data retention | Stored locally in `runs/` as individual JSON files; excluded from Git; manual deletion only in initial version; synthetic data only; redact sensitive values; Git exclusion does not provide encryption or protect local files on disk. |
+| Data retention | Stored locally in `runs/` as individual JSON files (planned for run persistence; storage implementation is future work); excluded from Git; manual deletion only in initial version; synthetic data only; redaction of sensitive values is **planned** (not implemented); Git exclusion does not provide encryption or protect local files on disk. |
 
 See [docs/security-and-privacy.md](docs/security-and-privacy.md).
 
@@ -147,7 +148,7 @@ See [docs/security-and-privacy.md](docs/security-and-privacy.md).
 
 | Topic | Decision |
 |-------|----------|
-| Language | Python 3.12 (decided; see `docs/decisions/0001-python-primary-language.md`) |
+| Language | Python 3.11+ minimum (tested in 3.12 environment; see `docs/decisions/0001-python-primary-language.md`) |
 | Dependencies | None (standard library first) |
 | Storage format for scenarios/results | JSON (decided; built-in `json`, zero dependencies) |
 | Agent integration interface | Subprocess via JSON over stdin/stdout (decided; memory isolation; Sandbox enforces security boundaries) |
@@ -167,7 +168,7 @@ See [docs/security-and-privacy.md](docs/security-and-privacy.md).
 3. **Configuration format:** JSON file (e.g., `agentlab.json`) with safe default values defined in code. Secrets must strictly be read from environment variables, never committed to config files.
 4. **Test framework:** Python's built-in `unittest` module. Keeps dependencies at zero, following the standard-library-first principle.
 5. **Run records storage and retention:** Stored as individual JSON files in a dedicated local `runs/` directory excluded from Git.
-   - *Security & privacy considerations:* Synthetic test data only; sensitive values must be redacted from records; manual deletion only in the initial version (no automatic deletion). Importantly, Git exclusion prevents repository exposure but does not provide encryption or protection for files residing on the local disk.
+   - *Security & privacy considerations:* Synthetic test data only; redaction of sensitive values in run records is **planned** (not implemented); manual deletion only in the initial version (no automatic deletion). Importantly, Git exclusion prevents repository exposure but does not provide encryption or protection for files residing on the local disk.
 
 ### 7.2 Remaining open questions (Planned for later phases)
 
