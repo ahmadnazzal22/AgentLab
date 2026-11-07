@@ -1,0 +1,13 @@
+{
+  "id": "hello-world",
+  "name": "Hello World Task Completion",
+  "description": "Basic M2 scenario: agent should complete a simple greeting task.",
+  "task": "Respond with the expected greeting.",
+  "allowed_tools": [],
+  "max_steps": 10,
+  "timeout_seconds": 5.0,
+  "metadata": {
+    "category": "task_completion",
+    "expected_output": "Hello, world!"
+  }
+}

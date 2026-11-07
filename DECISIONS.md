@@ -2,7 +2,7 @@
 
 This file records important project decisions that can be evidenced from repository artifacts (docs, code, commit history) at the time of writing.
 
-**Status:** Initial log (M1 documentation/closure support).
+**Status:** Active log (M1 committed/pushed; M2 implemented/verified and closed in working tree; Git operations pending explicit approval).
 **Last updated:** 2026-11-07
 
 ## Format
@@ -63,6 +63,21 @@ This file records important project decisions that can be evidenced from reposit
 - **Date:** Recorded in M1 decisions.
 - **Evidence:** `TASKS.md`, `ARCHITECTURE.md`, `.gitignore`
 
+## 0008 — M2 Basic Runner contract and boundaries (implemented in working tree)
+- **Decision:** Agent interface is `execute(scenario: Scenario) -> list[Event]`. Agents return events only and must not mutate `Run`. `BasicRunner` owns `Run` lifecycle, captures scenario snapshot, records events via `run.add_event()`, and performs **post-execution only** checks for `max_steps`/`timeout_seconds` (batch events; no immediate interruption/hard timeout/process isolation claimed). `TaskCompletionEvaluator` evaluates saved `Run` only (no rerun), requires `COMPLETED` plus evidence matching `metadata.expected_output` from explicit scenario or `run.scenario_snapshot` (no hardcoding). Simple text report renders Run + Score/Result.
+- **Alternatives considered/rejected:** Letting agent mutate `Run` (rejected: violates separation). Hardcoding expected output in evaluator (rejected). Subprocess/Docker/LLM/MCP/dashboard (rejected: out of M2 scope).
+- **Rationale:** Matches approved M2 scope and ARCHITECTURE separation (Runner vs Evaluator).
+- **Date:** 2026-11-07 (implemented; 121 tests passing in working tree).
+- **Evidence:** `src/agentlab/agents/base.py`, `sample_agent.py`, `src/agentlab/runner/runner.py`, `src/agentlab/evaluators/task_completion.py`, `src/agentlab/reporting/text_report.py`, `scenarios/task_completion/hello_world.json`, M2 tests.
+
+## 0009 — M2 Sample Agent location and core gate handling details
+- **Decision:** Reusable Sample Agent implemented in `src/agentlab/agents/` (no `examples/` wrapper in M2) for importability/testing. M1 review gates (1–5) implemented in `core` with tests. `Result.from_dict` explicitly ignores computed `overall_passed` input (tamper-resistant/round-trip) while rejecting other unknown keys. Case-insensitive duplicate prevention is supported via `normalize_identifier_for_comparison()`; full enforcement deferred to a central storage/registry layer when implemented. `runs_dir` write-time containment is provided as `resolve_path_within_storage()` (`resolve()`+`is_relative_to()`).
+- **Alternatives considered/rejected:** `examples/`-only agent (rejected for M2 testability). Rejecting `overall_passed` in `Result.from_dict` (rejected: breaks self-serialization/tamper-resistance test contract).
+- **Rationale:** Minimal, testable M2 delivery within scope; preserves M1 security intent; documents bounded exceptions.
+- **Date:** 2026-11-07.
+- **Evidence:** `src/agentlab/core/models.py`, `src/agentlab/core/config.py`, `tests/test_m2_prerequisites.py`, `tests/test_config.py` (minimal intent-preserving update), `TASKS.md`.
+
 ## Notes / Gaps
 - `ARCHITECTURE.md` references `docs/decisions/0001-python-primary-language.md`, but the `docs/` directory and that file are not present in the current repository tree (untracked/absent as observed). This log does not recreate missing historical records; it records evidenced decisions only.
+- M2 changes are in the working tree and not yet committed/pushed (no git operations performed). M2 closed by user confirmation (2026-11-07); Git operations pending explicit approval. `src/agentlab/agentlab.lnk` is untracked/out of scope.
 - Future decisions should include explicit alternatives and dates when made.

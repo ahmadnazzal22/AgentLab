@@ -16,7 +16,7 @@ import copy
 import json
 import math
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import re
 from typing import Any
 
@@ -49,6 +49,62 @@ SENSITIVE_KEY_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 DEFAULT_CONFIG_FILENAME: str = "agentlab.json"
+MAX_JSON_DEPTH = 100
+
+
+def validate_json_compatible(value: Any, field_name: str, *, _depth: int = 0) -> None:
+    """Validate that a value is JSON-compatible (for config metadata)."""
+    if _depth > MAX_JSON_DEPTH:
+        raise ValueError(f"{field_name} exceeds maximum nesting depth ({MAX_JSON_DEPTH})")
+    if value is None or isinstance(value, (bool, int, str)):
+        return
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError(f"{field_name} contains a non-finite number (NaN/Infinity not allowed)")
+        return
+    if isinstance(value, list):
+        for i, item in enumerate(value):
+            validate_json_compatible(item, f"{field_name}[{i}]", _depth=_depth + 1)
+        return
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if not isinstance(k, str):
+                raise ValueError(f"{field_name} contains a non-string key: {type(k).__name__}")
+            validate_json_compatible(v, f"{field_name}.{k}", _depth=_depth + 1)
+        return
+    raise ValueError(f"{field_name} contains an unsupported JSON type: {type(value).__name__}")
+
+
+def validate_runs_dir_path(runs_dir: Any, field_name: str = "Config.runs_dir") -> str:
+    """Validate runs_dir constraints for M2 gate 2.
+
+    Rejects: non-string/empty, absolute paths, drive-letter paths, '..', and NUL.
+    """
+    if not isinstance(runs_dir, str):
+        raise ValueError(f"{field_name} must be a string, got {type(runs_dir).__name__}")
+    if not runs_dir.strip():
+        raise ValueError(f"{field_name} must be a non-empty string")
+    if "\x00" in runs_dir:
+        raise ValueError(f"{field_name} must not contain NUL characters")
+    if ".." in PureWindowsPath(runs_dir).parts or ".." in Path(runs_dir).parts:
+        raise ValueError(f"{field_name} must not contain '..' path segments")
+    p = Path(runs_dir)
+    wp = PureWindowsPath(runs_dir)
+    if p.is_absolute() or wp.is_absolute() or wp.drive or runs_dir.startswith(("/", "\\")):
+        raise ValueError(f"{field_name} must be a relative path without a drive letter")
+    return runs_dir
+
+
+def resolve_path_within_storage(storage_dir: str | os.PathLike[str], relative_path: str | os.PathLike[str]) -> Path:
+    """Resolve a path and verify it remains within the storage directory (write-time check).
+
+    Uses resolve() + is_relative_to() as required by M2 gate 2.
+    """
+    base = Path(storage_dir).resolve()
+    candidate = (base / Path(relative_path)).resolve()
+    if not candidate.is_relative_to(base):
+        raise ValueError(f"Resolved path escapes storage directory: {relative_path!r}")
+    return candidate
 
 
 def is_sensitive_key(key_name: str) -> bool:
@@ -121,8 +177,7 @@ class Config:
 
     def validate(self) -> None:
         """Enforces type and range validations on all configuration fields."""
-        if not isinstance(self.runs_dir, str) or not self.runs_dir.strip():
-            raise ValueError("Config.runs_dir must be a non-empty string")
+        validate_runs_dir_path(self.runs_dir, "Config.runs_dir")
         if not isinstance(self.scenarios_dir, str) or not self.scenarios_dir.strip():
             raise ValueError("Config.scenarios_dir must be a non-empty string")
 
@@ -188,6 +243,7 @@ class Config:
             raise ValueError(
                 f"Config.metadata must be a dictionary, got {type(self.metadata).__name__}"
             )
+        validate_json_compatible(self.metadata, "Config.metadata")
 
         # API key validation (must be str or None)
         if self.api_key is not None and not isinstance(self.api_key, str):
@@ -243,6 +299,7 @@ def load_config(config_path: str | os.PathLike[str] | None = None) -> Config:
         - If config_path is explicitly provided and does not exist: raises FileNotFoundError.
         - If config_path is None and default 'agentlab.json' does not exist: uses safe defaults.
         - Scans JSON data recursively to reject any stored secrets/passwords/API keys.
+        - Rejects unknown configuration keys.
         - Populates api_key strictly from the AGENTLAB_API_KEY environment variable.
 
     Args:
@@ -266,13 +323,7 @@ def load_config(config_path: str | os.PathLike[str] | None = None) -> Config:
     # Security check: recursive scan for forbidden sensitive keys
     detect_secrets_recursively(file_data)
 
-    # Read sensitive API key strictly from environment variable
-    env_api_key = os.environ.get("AGENTLAB_API_KEY")
-    if isinstance(env_api_key, str) and env_api_key.strip() == "":
-        env_api_key = None
-
-    # Build kwargs for Config, overriding defaults with JSON values
-    kwargs: dict[str, Any] = {}
+    # Reject unknown top-level keys (M2 gate 5)
     allowed_fields = {
         "runs_dir",
         "scenarios_dir",
@@ -284,11 +335,27 @@ def load_config(config_path: str | os.PathLike[str] | None = None) -> Config:
         "environment",
         "metadata",
     }
+    unknown = sorted(k for k in file_data.keys() if k not in allowed_fields)
+    if unknown:
+        raise ValueError(f"Configuration contains unknown field(s): {', '.join(unknown)}")
 
-    for key, value in file_data.items():
-        if key in allowed_fields:
-            kwargs[key] = value
+    # Read sensitive API key strictly from environment variable
+    env_api_key = os.environ.get("AGENTLAB_API_KEY")
+    if isinstance(env_api_key, str) and env_api_key.strip() == "":
+        env_api_key = None
+
+    # Build kwargs for Config, overriding defaults with JSON values
+    kwargs: dict[str, Any] = {k: v for k, v in file_data.items() if k in allowed_fields}
+    if "metadata" in kwargs and not isinstance(kwargs["metadata"], dict):
+        raise ValueError(
+            f"Config.metadata must be a dictionary, got {type(kwargs['metadata']).__name__}"
+        )
+    if "metadata" in kwargs:
+        validate_json_compatible(kwargs["metadata"], "Config.metadata")
 
     kwargs["api_key"] = env_api_key
 
-    return Config(**kwargs)
+    try:
+        return Config(**kwargs)
+    except TypeError as exc:
+        raise ValueError(f"Configuration contains invalid field types/values: {exc}") from exc

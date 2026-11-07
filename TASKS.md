@@ -2,7 +2,7 @@
 
 This is the **living to-do list** of AgentLab. It changes as the project grows and as you complete new courses.
 
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-07
 
 ## Legend
 
@@ -32,7 +32,9 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 
 ## 3. Current focus
 
-**M1 provisionally complete (code/tests):** Core data models (`Scenario`, `Event`, `Run`, `Score`, `Result`) and basic configuration handling (`Config`, `load_config`) implemented in `src/agentlab/core/` with automated unit tests (86 passing tests). M1 implementation work completed in three internal phases (core models, config hardening, documentation/housekeeping). Claude performed an independent review: **code and tests approved with minor notes; documentation review returned NOT APPROVED** (corrections in progress). M1 is not formally closed.
+**M1 committed/pushed:** `9bc510f` (`Complete M1: Core Models and Configuration`) on `main`, pushed to `origin/main`. Claude M1 review: code/tests approved with minor notes; D13 not provided/verified.
+
+**M2 implemented and verified in working tree (closed; Git operations pending explicit approval):** First full flow complete — `Scenario → Sample Agent → Runner → Run Record → Task Completion Evaluator → Text Report`. M2 gates (1–5) implemented in `core`. Full suite: **121 tests passing** (`python -X dev -W error -m unittest discover -s tests`, 2026-11-07). No stage/commit/push performed. Untracked `src/agentlab/agentlab.lnk` excluded from scope.
 
 ---
 
@@ -64,18 +66,19 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 - [x] Add first tests in `tests/`
 - **Course unlock:** TBD
 
-### M2: Basic runner and task-completion evaluation `[PLANNED]`
-- [ ] Minimal runner in `runner/`
-- [ ] One simple sample agent in `examples/`
-- [ ] First scenario in `scenarios/task_completion/`
-- [ ] First evaluator (task completion) in `evaluators/`
-- [ ] First plain-text report in `reporting/`
-- **M2 prerequisites (from Claude's M1 code review):** Five findings identified as prerequisites/gates for M2. Documented as **future requirements**; do not implement code changes for these in this documentation update. Address/verify before or as part of M2 implementation as directed by review.
-  - [ ] **1. Identifier Policy:** Tighten `validate_identifier` to require an alphanumeric start, reject trailing dots, reject Windows reserved names (e.g., `CON`, `NUL`, `COM1`), and define a policy preventing case-only duplicates.
-  - [ ] **2. Config.runs_dir Constraints:** Reject absolute paths, drive-letter paths, `..`, and NUL characters in settings. When writing, verify the resolved path remains within the storage directory using `resolve()` and `is_relative_to()`.
-  - [ ] **3. JSON Compatibility Validation:** Validate that custom data is JSON-compatible: string keys, supported values, finite decimal numbers, no `set` or unsupported objects, with a depth limit.
-  - [ ] **4. from_dict Error Contract:** Validate input type and normalize invalid-data errors to `ValueError` with a clear message identifying the field/problem.
-  - [ ] **5. Unknown-key Rejection:** Reject unknown keys in `load_config` and `from_dict` instead of ignoring them, with clear errors.
+### M2: Basic runner and task-completion evaluation `[IMPLEMENTED]` *(verified in working tree, 121 tests OK; Git operations pending explicit approval)*
+- [x] Minimal runner in `runner/` (`src/agentlab/runner/runner.py`, `BasicRunner`; post-execution `max_steps`/`timeout_seconds` checks only)
+- [x] One simple deterministic sample agent (`src/agentlab/agents/sample_agent.py`; reusable implementation in `src/` for M2 testability; no `examples/` wrapper added)
+- [x] First scenario in `scenarios/task_completion/` (`hello_world.json`, `metadata.expected_output`)
+- [x] First evaluator (task completion) in `evaluators/` (`TaskCompletionEvaluator`; evaluates saved `Run` only, no rerun, no hardcoded expected output)
+- [x] First plain-text report in `reporting/` (`render_text_report`)
+- [x] M2 integration + unit tests added (`tests/test_m2_prerequisites.py`, `test_agents.py`, `test_runner.py`, `test_task_completion_evaluator.py`, `test_m2_integration.py`); full suite **121 tests OK** (2026-11-07)
+- **M2 prerequisites (from Claude's M1 code review):** Addressed in `core` as M2 gates and verified by tests (limited M1 test update: `test_config.py::test_to_dict_rejects_nan_infinity` adapted to fail-fast JSON validation; intent preserved).
+  - [x] **1. Identifier Policy:** Alphanumeric start, reject trailing dot, reject Windows reserved names (`CON/NUL/COM1` etc.), and case-insensitive duplicate-prevention policy support (`normalize_identifier_for_comparison`; storage-layer enforcement when a central registry exists).
+  - [x] **2. Config.runs_dir Constraints:** Reject absolute/drive/leading-separator paths, `..`, and NUL. Write-time containment check available via `resolve()` + `is_relative_to()` (`resolve_path_within_storage`).
+  - [x] **3. JSON Compatibility Validation:** String keys, supported JSON values, finite numbers, reject `set`/unsupported objects, depth limit.
+  - [x] **4. from_dict Error Contract:** Input type validated; invalid/missing/type errors normalized to `ValueError` with clear field/problem.
+  - [x] **5. Unknown-key Rejection:** `load_config` and `from_dict` reject unknown keys with clear errors (`Result.from_dict` explicitly ignores computed `overall_passed` only, to preserve tamper resistance/round-trip).
 - **Course unlock:** TBD
 
 ### M3: Tool selection and execution `[PLANNED]`

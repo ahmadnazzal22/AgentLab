@@ -1,15 +1,15 @@
-# TOOLS_LOG.md: Tooling & Collaboration Log (M1)
+# TOOLS_LOG.md: Tooling & Collaboration Log
 
-This log documents observed tool/collaboration usage for AgentLab M1 **based only on available evidence** in repository artifacts and the current working state. It avoids speculation about unrecorded interactions.
+This log documents observed tool/collaboration usage for AgentLab **based only on available evidence** in repository artifacts and the current working state. It avoids speculation about unrecorded interactions.
 
-**Scope:** M1 (provisionally complete in code/tests; documentation corrections in progress)
+**Scope:** M1 (committed/pushed as `9bc510f`) + M2 implemented/verified/closed in working tree (Git operations pending explicit approval)
 **Last updated:** 2026-11-07
 
 ## Evidence sources used
 - Repository files: `CLAUDE.md`, `README.md`, `ARCHITECTURE.md`, `PROJECT_PLAN.md`, `TASKS.md`, `DECISIONS.md`
-- Git history: `0472d26 Initial commit: AgentLab project documentation and setup` (current visible history)
-- Working tree state: modified docs, untracked `src/` and `tests/` (M1 code/tests present locally)
-- Test execution (this session): `python -X dev -W error -m unittest discover -s tests` → 86 tests OK
+- Git history (as observed): `0472d26` initial commit; `9bc510f Complete M1: Core Models and Configuration` on `main` (pushed earlier in session, per user-approved git ops)
+- Working tree state (current): M2 files modified/untracked; `src/agentlab/agentlab.lnk` untracked (not part of scope)
+- Test execution (2026-11-07): `python -X dev -W error -m unittest discover -s tests` → **121 tests OK** (86 M1 + 35 M2)
 
 ## Tool entries
 
@@ -26,12 +26,12 @@ This log documents observed tool/collaboration usage for AgentLab M1 **based onl
 - **Notes:** This log does not include private conversation transcripts; it records only outcomes evidenced in repo files.
 
 ### OpenCode
-- **Role (evidenced):** Used in this environment to inspect files, apply documentation updates, create `DECISIONS.md` and `TOOLS_LOG.md`, and run the M1 test suite (as evidenced by this session's actions and command results).
-- **Strengths observed (evidenced):** Effective at repository inspection, targeted edits, and running local verification commands in a controlled workflow.
-- **Limitations/risks observed (evidenced):** Must rely on user-provided review details when not present in repo (e.g., cannot invent Claude finding text); should avoid overclaiming beyond verifiable artifacts.
-- **Notes:** Follow project rules: no staging/committing/pushing without approval; no scope expansion.
+- **Role (evidenced):** Inspected repo/docs; performed M1 git closure operations only when explicitly approved by user; implemented approved M2 plan in working tree (core gates 1–5, agents/runner/evaluator/reporting/scenario/tests); performed final `runner.py` review fixes (removed unused `agent_id_resolve`, hardened event-recording error handling to finalize Run); updated `TASKS.md`, `DECISIONS.md`, `TOOLS_LOG.md`; ran test suite repeatedly.
+- **Strengths observed (evidenced):** Effective at incremental implementation, targeted edits, and local verification under constraints.
+- **Limitations/risks observed (evidenced):** Must not overclaim closure or perform unapproved git ops; core contract tightening required one minimal M1 test adjustment (intent preserved, documented).
+- **Notes:** No staging/committing/pushing performed for M2 changes. `src/agentlab/agentlab.lnk` observed as untracked; left untouched (out of scope).
 
 ## Gaps / Follow-ups
-- Add dates, task references, and concrete artifacts for each tool contribution as they occur.
+- M2 closed (2026-11-07). Perform Git operations only if explicitly approved; exclude `src/agentlab/agentlab.lnk`.
 - If Claude's full M1 review notes (including any D13) are provided, update `TASKS.md`/docs accordingly with verifiable citations.
 - Keep this log factual and update at milestone boundaries.

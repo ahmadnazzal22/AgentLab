@@ -341,12 +341,12 @@ class TestConfigLoader(unittest.TestCase):
                 load_config(config_path=config_file)
 
     def test_to_dict_rejects_nan_infinity(self) -> None:
-        cfg = Config(metadata={"val": float("nan")})
+        # M2 JSON compatibility validation rejects non-finite numbers at validation time
+        # (fail-fast), which preserves and strengthens the M1 safety intent.
         with self.assertRaises(ValueError):
-            cfg.to_dict()
-        cfg2 = Config(metadata={"val": float("inf")})
+            Config(metadata={"val": float("nan")})
         with self.assertRaises(ValueError):
-            cfg2.to_dict()
+            Config(metadata={"val": float("inf")})
 
     def test_secret_detection_aws_and_jwt(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
