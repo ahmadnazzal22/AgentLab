@@ -2,7 +2,7 @@
 
 This log documents observed tool/collaboration usage for AgentLab **based only on available evidence** in repository artifacts and the current working state. It avoids speculation about unrecorded interactions.
 
-**Scope:** M1/M2 committed+pushed; M3 + approved audit remediations implemented/verified in working tree (159 tests passing; Git operations not performed)
+**Scope:** M1/M2 committed+pushed; M3 + approved audit remediations implemented/verified (159 tests passing) and committed/pushed as `009f5c5`
 **Last updated:** 2026-11-09 (final M3 verification)
 
 ## Evidence sources used
@@ -36,7 +36,7 @@ This log documents observed tool/collaboration usage for AgentLab **based only o
 - **Notes (M3):** No staging/committing/pushing performed for M3 or audit remediations. `src/agentlab/agentlab.lnk`, `agent.py`, and `test.py` remain untracked/local artifacts; `app.py`/`agent.py`/`test.py` were not modified/deleted/moved in this phase.
 
 ## Gaps / Follow-ups
-- M3 implemented and audit-remediated in working tree (**159 tests OK**, 2026-11-09) but **not closed/committed**. Perform Git operations only if explicitly approved; exclude `src/agentlab/agentlab.lnk` and respect decisions about other untracked artifacts.
+- M3 implemented, audit-remediated, and committed/pushed as `009f5c5` (**159 tests OK**, 2026-11-09). Perform Git operations only if explicitly approved; exclude `src/agentlab/agentlab.lnk` and respect decisions about other untracked artifacts.
 - **P9.D deferred:** evaluate `scenarios_dir` tightening separately (compatibility risk) before implementation.
 - If Claude's full M1 review notes (including any D13) are provided, update `TASKS.md`/docs accordingly with verifiable citations.
 - Keep this log factual and update at milestone boundaries.

@@ -2,7 +2,7 @@
 
 **AgentLab is an AI agent testing and evaluation platform, built to help people assess whether agents complete tasks correctly, use tools appropriately, and respect safety boundaries.**
 
-> **Status: M1 and M2 are committed and pushed (`9bc510f`, `0d83e1b` on `origin/main`). M3 (tool selection and execution evaluation) plus approved audit remediations are implemented and verified in the working tree (159 tests passing, 2026-11-09) but are not committed or closed.** The current implementation includes a basic in-process runner, deterministic sample/tool-using agents, deterministic mock tools, task-completion and tool evaluators, and a plain-text report. No real MCP, sandbox isolation, subprocess/Docker execution, hard timeout interruption, persistence layer, or cost evaluation is implemented.
+> **Status: M1 and M2 are committed and pushed (`9bc510f`, `0d83e1b` on `origin/main`). M3 (tool selection and execution evaluation) plus approved audit remediations are implemented, verified (159 tests passing, 2026-11-09), and committed/pushed as `009f5c5`.** The current implementation includes a basic in-process runner, deterministic sample/tool-using agents, deterministic mock tools, task-completion and tool evaluators, and a plain-text report. No real MCP, sandbox isolation, subprocess/Docker execution, hard timeout interruption, persistence layer, or cost evaluation is implemented.
 
 ---
 
@@ -21,7 +21,7 @@ Think of it as a **driving test for AI agents**: a closed course, a checklist, a
 | # | Area | The question we answer | Status |
 |---|------|------------------------|--------|
 | 1 | Task completion and accuracy | Did the agent actually do the job, correctly? | `[IMPLEMENTED, basic]` |
-| 2 | Tool selection and execution | Did it pick the right tools and use them properly? | `[IMPLEMENTED, basic / M3 in working tree]` |
+| 2 | Tool selection and execution | Did it pick the right tools and use them properly? | `[IMPLEMENTED, basic / M3 completed, committed, and pushed]` |
 | 3 | MCP integration and tool permissions | Did it stay within the permissions it was given? | `[PLANNED]` |
 | 4 | Prompt injection resistance | Can hidden instructions in data trick it? | `[PLANNED]` |
 | 5 | Reliability and error handling | What happens when tools fail or inputs are odd? | `[PLANNED]` |
@@ -49,9 +49,9 @@ We are strict about honesty. Every feature is labelled:
 | Basic in-process runner (batch agent contract, post-execution checks only) | `[IMPLEMENTED]` |
 | Deterministic `SampleAgent` and `ToolUsingAgent` | `[IMPLEMENTED]` |
 | Task-completion evaluation and plain-text report | `[IMPLEMENTED]` |
-| Deterministic mock tool framework + `MockToolRegistry` | `[IMPLEMENTED, M3 in working tree]` |
-| Tool choice / tool argument evaluators (saved `Run` only) | `[IMPLEMENTED, M3 in working tree]` |
-| Audit remediations (P1–P7, P9.A–C) with regression tests | `[IMPLEMENTED, M3 in working tree; 159 tests passing]` |
+| Deterministic mock tool framework + `MockToolRegistry` | `[IMPLEMENTED, M3 completed, committed, and pushed]` |
+| Tool choice / tool argument evaluators (saved `Run` only) | `[IMPLEMENTED, M3 completed, committed, and pushed]` |
+| Audit remediations (P1–P7, P9.A–C) with regression tests | `[IMPLEMENTED, M3 completed, committed, and pushed; 159 tests passing]` |
 | Real MCP, sandbox isolation, subprocess/Docker execution, hard timeout interruption, persistence, cost evaluation | `[PLANNED / NOT IMPLEMENTED]` |
 
 ## 5. How it works (current implementation)
@@ -62,7 +62,7 @@ Scenario  ->  BasicRunner  ->  SampleAgent  ->  TaskCompletionEvaluator  ->  Tex
             (in-process)     (scripted)      (saved Run only)
 ```
 
-**M3-style tool-use flow (working tree):**
+**M3-style tool-use flow (committed as `009f5c5`):**
 ```
 Scenario (allowed_tools, tool_call metadata)
     -> BasicRunner (in-process, batch)
@@ -104,16 +104,16 @@ agentlab/
 │   ├── core/             Models, config, validation `[IMPLEMENTED]`
 │   ├── runner/           `BasicRunner` `[IMPLEMENTED]`
 │   ├── sandbox/          `[PLANNED]`
-│   ├── tools/            Deterministic mock tools + registry `[IMPLEMENTED, M3 in working tree]`
+│   ├── tools/            Deterministic mock tools + registry `[IMPLEMENTED, M3 completed, committed, and pushed]`
 │   ├── mcp/              `[PLANNED]`
-│   ├── evaluators/       Task completion + tool choice/args `[IMPLEMENTED]` (M3 in working tree)
+│   ├── evaluators/       Task completion + tool choice/args `[IMPLEMENTED]` (M3 completed, committed, and pushed)
 │   ├── safety/           `[PLANNED]`
 │   ├── metrics/          `[PLANNED]`
 │   └── reporting/        Plain-text report `[IMPLEMENTED]`
 │
 ├── scenarios/
 │   ├── task_completion/  `[IMPLEMENTED]`
-│   ├── tool_use/         `[IMPLEMENTED, M3 in working tree]`
+│   ├── tool_use/         `[IMPLEMENTED, M3 completed, committed, and pushed]`
 │   ├── prompt_injection/ `[PLANNED directory, may be empty]`
 │   ├── reliability/      `[PLANNED directory, may be empty]`
 │   └── safety_approval/  `[PLANNED directory, may be empty]`

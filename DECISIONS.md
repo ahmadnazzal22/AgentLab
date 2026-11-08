@@ -2,7 +2,7 @@
 
 This file records important project decisions that can be evidenced from repository artifacts (docs, code, commit history) at the time of writing.
 
-**Status:** Active log (M1 committed/pushed as `9bc510f`; M2 committed/pushed as `0d83e1b` with explicit approval; M3 implemented/verified in working tree, Git operations not performed).
+**Status:** Active log (M1 committed/pushed as `9bc510f`; M2 committed/pushed as `0d83e1b` with explicit approval; M3 implemented/verified and committed/pushed as `009f5c5` to `origin/main`).
 **Last updated:** 2026-11-09
 
 ## Format
@@ -105,6 +105,6 @@ This file records important project decisions that can be evidenced from reposit
 
 ## Notes / Gaps
 - The old `docs/decisions/0001-python-primary-language.md` file referenced by earlier drafts is not present in this repository tree. `DECISIONS.md` is the current in-repo decision log.
-- M2 was committed/pushed to `origin/main` as `0d83e1b` (`Complete M2: Basic Runner and Task Completion Evaluation`) with explicit approval (2026-11-07). M3 + audit remediations are implemented/verified in the working tree (**159 tests passing, 2026-11-09**); **no Git operations performed; M3 not closed**. The 156-test result above is the historical verification recorded for the 2026-11-08 remediation. `src/agentlab/agentlab.lnk` remains untracked/out of scope. Root artifacts `agent.py`/`test.py`/`app.py` were not modified/deleted/moved in this phase.
+- M2 was committed/pushed to `origin/main` as `0d83e1b` (`Complete M2: Basic Runner and Task Completion Evaluation`) with explicit approval (2026-11-07). M3 + audit remediations are implemented/verified (**159 tests passing, 2026-11-09**) and committed/pushed as `009f5c5`. The 156-test result above is the historical verification recorded for the 2026-11-08 remediation. `src/agentlab/agentlab.lnk` remains untracked/out of scope. Root artifacts `agent.py`/`test.py`/`app.py` were not modified/deleted/moved in this phase.
 - **P9.D deferred:** `scenarios_dir` validation tightening not approved/implemented; requires separate compatibility review.
 - Future decisions should include explicit alternatives and dates when made.

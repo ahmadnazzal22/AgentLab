@@ -1,6 +1,6 @@
 # ARCHITECTURE.md: System Architecture
 
-> **Status (2026-11-09):** M1/M2 are implemented and pushed (`9bc510f`, `0d83e1b`). M3 scope (deterministic mock tools, tool-choice/args evaluation) and approved audit remediations are implemented and verified in the working tree (**159 tests passing**) but **not committed/closed**.
+> **Status (2026-11-09):** M1/M2 are implemented and pushed (`9bc510f`, `0d83e1b`). M3 scope (deterministic mock tools, tool-choice/args evaluation) and approved audit remediations are implemented and verified (**159 tests passing**) and committed/pushed as `009f5c5`.
 > The implementation is **in-process and scope-limited**: batch agent execution, post-execution checks only, saved-Run evaluation, deterministic mock tools, and plain-text reporting. **No** real MCP, sandbox isolation, subprocess/Docker execution, hard timeout interruption, persistence implementation, or cost evaluation is claimed. Other components remain `[PLANNED]` unless marked otherwise.
 
 ---
@@ -70,7 +70,7 @@ Each component maps to a folder in `src/agentlab/`. Status is noted per componen
   - `ToolArgsEvaluator` (M3, audit-remediated): requires `COMPLETED`; requires `expected_args` (dict/object). If `expected_tool` is provided, it fails when that tool is not found and **never compares args from a different tool**. Uses deterministic structural equality for JSON-compatible args and provides `evidence_event_ids`.
 - **Planned evaluator families** (one per goal):
   1. Task completion and accuracy `[implemented basic]`
-  2. Tool selection and execution `[implemented basic, M3 in working tree]`
+  2. Tool selection and execution `[implemented basic, M3 completed, committed, and pushed]`
   3. Permission compliance (MCP) `[planned, M4]`
   4. Prompt-injection resistance `[planned, M5]`
   5. Reliability and error handling `[planned, M6]`
