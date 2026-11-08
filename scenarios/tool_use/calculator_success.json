@@ -1,0 +1,19 @@
+{
+  "id": "tool-calc-success",
+  "name": "Tool Use Success: Calculator Add",
+  "description": "M3 scenario: agent selects the allowed tool with correct arguments.",
+  "task": "Use the calculator_add tool to add 2 and 3.",
+  "allowed_tools": ["calculator_add"],
+  "max_steps": 10,
+  "timeout_seconds": 5.0,
+  "metadata": {
+    "category": "tool_use",
+    "tool_call": {
+      "name": "calculator_add",
+      "args": {"a": 2, "b": 3}
+    },
+    "expected_tool": "calculator_add",
+    "expected_args": {"a": 2, "b": 3},
+    "expected_output": "5"
+  }
+}

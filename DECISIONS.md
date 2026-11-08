@@ -2,8 +2,8 @@
 
 This file records important project decisions that can be evidenced from repository artifacts (docs, code, commit history) at the time of writing.
 
-**Status:** Active log (M1 committed/pushed; M2 implemented/verified and closed in working tree; Git operations pending explicit approval).
-**Last updated:** 2026-11-07
+**Status:** Active log (M1 committed/pushed as `9bc510f`; M2 committed/pushed as `0d83e1b` with explicit approval; M3 implemented/verified in working tree, Git operations not performed).
+**Last updated:** 2026-11-09
 
 ## Format
 - **Decision:** What was decided
@@ -77,7 +77,34 @@ This file records important project decisions that can be evidenced from reposit
 - **Date:** 2026-11-07.
 - **Evidence:** `src/agentlab/core/models.py`, `src/agentlab/core/config.py`, `tests/test_m2_prerequisites.py`, `tests/test_config.py` (minimal intent-preserving update), `TASKS.md`.
 
+## 0010 — M3 Tool Selection and Execution Evaluation (implemented in working tree)
+- **Decision:** Implement M3 under the unchanged batch Agent contract (`execute(scenario) -> list[Event]`) and unchanged `BasicRunner`/post-execution `max_steps` behavior. Add deterministic, stdlib-only mock tools (`src/agentlab/tools/`) and `ToolUsingAgent` driven by `Scenario.metadata.tool_call`. Enforce `Scenario.allowed_tools` in `MockToolRegistry.dispatch` **before** execution: record `TOOL_CALL` attempt, do **not** execute disallowed tool, then record `TOOL_RESULT` with `content.status="denied"`, `reason="tool_not_allowed"`, `tool`, `call_id`, and `allowed_tools`. Add `ToolChoiceEvaluator` and `ToolArgsEvaluator` that evaluate **saved `Run` records only** (no rerun), require `RunStatus.COMPLETED`, and provide `evidence_event_ids`. Scenarios: success (`tool_use/calculator_success.json`, allowed tool + correct args) and failure (`tool_use/disallowed_tool_failure.json`, disallowed attempt denied/not executed).
+- **Alternatives considered/rejected:** Changing Agent/Runner to interactive tool loop (rejected: out of scope; breaks M2 contract). Executing then filtering disallowed tools (rejected: unsafe/wrong; violates explicit decision). Allowing evaluators to run on non-COMPLETED runs by default (rejected for consistency with M2; explicit COMPLETED requirement adopted). Real MCP/subprocess/Docker/network/file tools (rejected: out of M3 scope).
+- **Rationale:** Delivers tool-selection/argument evaluation with auditable evidence while preserving M1/M2 architecture and safety constraints.
+- **Date:** 2026-11-08 (implemented; 145 tests passing in working tree).
+- **Evidence:** `src/agentlab/tools/*.py`, `src/agentlab/agents/tool_using_agent.py`, `src/agentlab/evaluators/tool_choice.py`, `src/agentlab/evaluators/tool_args.py`, `scenarios/tool_use/*.json`, `tests/test_tools.py`, `tests/test_tool_using_agent.py`, `tests/test_tool_evaluators.py`, `tests/test_m3_integration.py`.
+
+## 0011 — Audit remediations (M3 working tree, approved scope)
+- **Decision (implemented, 2026-11-08):** Apply approved audit remediations without expanding M3 scope and without Git operations.
+  - **P1 (`ToolArgsEvaluator`):** fail if `expected_tool` is specified but not found in `TOOL_CALL` evidence; never compare args from a different tool. Regression: wrong tool with exact expected args must fail.
+  - **P2 (`BasicRunner`):** safely handle invalid Agent returns (`None`, int, dict/non-list, etc.); normalize/record as execution failure and finalize a `FAILED` `Run` (no crash), with `agent_events_returned` counted safely.
+  - **P3 (`BasicRunner`):** deterministic, bounded system event IDs (`sys-<kind>-<sha256 prefix>`) preserve identifier policy/`MAX_IDENTIFIER_LENGTH` for long valid run IDs (e.g., 64 chars). Store `run_id` in system event content for traceability.
+  - **P4 (`BasicRunner`):** preserve all detected violations; record `timed_out`/`max_steps_exceeded`; status precedence: agent/execution/recording error -> `FAILED`; timeout -> `TIMEOUT`; max_steps only -> `FAILED`. Do **not** claim hard timeout interruption (post-execution checks only).
+  - **P5 (`MockToolRegistry`):** deny-by-default when `allowed_tools=None` (missing allowlist): record `TOOL_CALL`, do **not** execute, record denied `TOOL_RESULT` (`tool_not_allowed`, `allowed_tools=[]`, `allowlist_missing=True`). Existing supported flow remains compatible (`ToolUsingAgent` passes explicit allowlist).
+  - **P6 (`TaskCompletionEvaluator`):** conservative completion-evidence rule; expected text only in task restatement/start context (e.g., `Starting task: ...`, no final/result markers) does not prove completion. Completion evidence counted in result-bearing contexts (`TOOL_RESULT` content; `AGENT_MESSAGE` with `final`/output/result markers as implemented).
+  - **P7 (`SampleAgent`):** label tool `TOOL_CALL`/`TOOL_RESULT` events as scripted/simulated trace (`trace_kind="scripted_demo"`, `registry_dispatched=False`), not mock-registry-dispatched execution.
+  - **P8 (docs):** align `README/CLAUDE/PROJECT_PLAN/ARCHITECTURE/TASKS` to actual implementation; fix/remove broken `docs/*` links without creating a docs system; document `app.py`/`agent.py`/`test.py` status accurately (no delete/move/modify).
+  - **P9.A:** include `evidence_event_ids` for each `Result` score in plain-text reports.
+  - **P9.B:** stricter `call_id` binding in `ToolChoiceEvaluator` when `call_id` is present.
+  - **P9.C:** reject duplicate tool registration in `MockToolRegistry`.
+  - **P9.D (deferred, not implemented):** `scenarios_dir` tightening — separate approval required due to compatibility risk.
+- **Alternatives considered/rejected:** Cross-tool arg fallback in `ToolArgsEvaluator` (rejected: can produce false pass). Crashing on bad agent return (rejected). Silent truncation of long run IDs in event IDs (rejected: ambiguity/collision risk; bounded hash chosen). Executing tools when allowlist missing (rejected). Complex new evidence ontology for task completion (rejected; conservative rule chosen).
+- **Rationale:** Fix confirmed audit risks/false positives, improve safety/traceability, and keep claims honest without rewriting M1/M2 or expanding scope.
+- **Date:** 2026-11-08.
+- **Evidence:** `runner.py`, `evaluators/{tool_args,tool_choice,task_completion}.py`, `tools/registry.py`, `agents/sample_agent.py`, `reporting/text_report.py`, updated tests (`test_runner.py`, `test_tool_evaluators.py`, `test_tools.py`, `test_task_completion_evaluator.py`), aligned docs. Full suite: **156 tests OK** (`python -X dev -W error -m unittest discover -s tests`).
+
 ## Notes / Gaps
-- `ARCHITECTURE.md` references `docs/decisions/0001-python-primary-language.md`, but the `docs/` directory and that file are not present in the current repository tree (untracked/absent as observed). This log does not recreate missing historical records; it records evidenced decisions only.
-- M2 changes are in the working tree and not yet committed/pushed (no git operations performed). M2 closed by user confirmation (2026-11-07); Git operations pending explicit approval. `src/agentlab/agentlab.lnk` is untracked/out of scope.
+- The old `docs/decisions/0001-python-primary-language.md` file referenced by earlier drafts is not present in this repository tree. `DECISIONS.md` is the current in-repo decision log.
+- M2 was committed/pushed to `origin/main` as `0d83e1b` (`Complete M2: Basic Runner and Task Completion Evaluation`) with explicit approval (2026-11-07). M3 + audit remediations are implemented/verified in the working tree (**159 tests passing, 2026-11-09**); **no Git operations performed; M3 not closed**. The 156-test result above is the historical verification recorded for the 2026-11-08 remediation. `src/agentlab/agentlab.lnk` remains untracked/out of scope. Root artifacts `agent.py`/`test.py`/`app.py` were not modified/deleted/moved in this phase.
+- **P9.D deferred:** `scenarios_dir` validation tightening not approved/implemented; requires separate compatibility review.
 - Future decisions should include explicit alternatives and dates when made.

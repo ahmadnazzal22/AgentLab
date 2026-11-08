@@ -2,7 +2,7 @@
 
 This is the **living to-do list** of AgentLab. It changes as the project grows and as you complete new courses.
 
-**Last updated:** 2026-11-07
+**Last updated:** 2026-11-09 (M3 audit remediation and final verification)
 
 ## Legend
 
@@ -34,7 +34,13 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 
 **M1 committed/pushed:** `9bc510f` (`Complete M1: Core Models and Configuration`) on `main`, pushed to `origin/main`. Claude M1 review: code/tests approved with minor notes; D13 not provided/verified.
 
-**M2 implemented and verified in working tree (closed; Git operations pending explicit approval):** First full flow complete — `Scenario → Sample Agent → Runner → Run Record → Task Completion Evaluator → Text Report`. M2 gates (1–5) implemented in `core`. Full suite: **121 tests passing** (`python -X dev -W error -m unittest discover -s tests`, 2026-11-07). No stage/commit/push performed. Untracked `src/agentlab/agentlab.lnk` excluded from scope.
+**M2 committed/pushed:** `0d83e1b` (`Complete M2: Basic Runner and Task Completion Evaluation`) on `main`, pushed to `origin/main` (`9bc510f..0d83e1b`, 2026-11-07) with explicit approval. M2 flow: `Scenario → SampleAgent → BasicRunner → Run → TaskCompletionEvaluator → Text Report` (in-process, batch, post-execution checks only).
+
+**M3 completed in the working tree (not committed or pushed):** Tool Selection and Execution Evaluation is implemented (`src/agentlab/tools/`, `ToolUsingAgent`, `ToolChoiceEvaluator`, `ToolArgsEvaluator`, `scenarios/tool_use/*`, M3 tests). Approved remediations implemented and regression-tested: **P1** `ToolArgsEvaluator` fails if a specified `expected_tool` is absent from `TOOL_CALL` events and never compares args from a different tool; **P2** `BasicRunner` safely handles invalid agent returns (`None`/int/non-list) and returns a finalized `FAILED` `Run`; **P3** deterministic bounded system event IDs preserve identifier policy/length for long run IDs (traceability via `run_id` in content); **P4** all detected violations preserved with approved status precedence and post-execution-only semantics; **P5** `MockToolRegistry` deny-by-default when `allowed_tools=None` (no execution); **P6** conservative `TaskCompletionEvaluator` completion-evidence rule (task restatement/start alone is insufficient); **P7** `SampleAgent` tool trace marked scripted/simulated (`trace_kind="scripted_demo"`, `registry_dispatched=False`); **P8** docs aligned to actual implementation and broken `docs/*` links fixed/removed without creating a docs system; **P9.A–C** `evidence_event_ids` in result text reports, stricter `call_id` binding in `ToolChoiceEvaluator` where applicable, duplicate tool registration rejected. **P9.D (`scenarios_dir` tightening) deferred** — not approved/implemented; handle separately due to compatibility risk.
+
+**Current verification:** `python -X dev -W error -m unittest discover -s tests` → **159 tests passing** (2026-11-09, Windows). **No Git staging/commit/push/reset performed.**
+
+**Unmodified root/local artifacts (documented only):** `app.py` (M2-style sample entry point), `agent.py` (untracked local experiment/script), `test.py` (untracked local experiment/script). `src/agentlab/agentlab.lnk` remains untracked/out of scope.
 
 ---
 
@@ -48,14 +54,14 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 - [x] Write `PROJECT_PLAN.md`
 - [x] Write `ARCHITECTURE.md`
 - [x] Write `TASKS.md`
-- [x] Write `docs/security-and-privacy.md`, `docs/GLOSSARY.md`, `docs/learning-log.md`
+- [x] Write security/privacy, glossary, and learning-log documentation (referenced in M0; those `docs/` files are not present in the current repository tree)
 - [x] Record first decision (Python as primary language)
 - [x] Add `.gitignore`
 - [x] Initialize Git on `main`
 - [x] Configure your Git identity (`user.name`, `user.email`)
 - [x] Make the first commit (`0472d26`)
 
-### M1: Core models and configuration `[IN PROGRESS]`
+### M1: Core models and configuration `[IMPLEMENTED]` *(committed/pushed as `9bc510f`)*
 - [x] Decide scenario and result file format (JSON chosen)
 - [x] Decide how agents plug in (Subprocess via JSON stdin/stdout chosen; Sandbox enforces security)
 - [x] Decide configuration format (JSON with safe defaults in code chosen)
@@ -66,7 +72,7 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 - [x] Add first tests in `tests/`
 - **Course unlock:** TBD
 
-### M2: Basic runner and task-completion evaluation `[IMPLEMENTED]` *(verified in working tree, 121 tests OK; Git operations pending explicit approval)*
+### M2: Basic runner and task-completion evaluation `[IMPLEMENTED]` *(committed/pushed as `0d83e1b`, 2026-11-07)*
 - [x] Minimal runner in `runner/` (`src/agentlab/runner/runner.py`, `BasicRunner`; post-execution `max_steps`/`timeout_seconds` checks only)
 - [x] One simple deterministic sample agent (`src/agentlab/agents/sample_agent.py`; reusable implementation in `src/` for M2 testability; no `examples/` wrapper added)
 - [x] First scenario in `scenarios/task_completion/` (`hello_world.json`, `metadata.expected_output`)
@@ -79,13 +85,21 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
   - [x] **3. JSON Compatibility Validation:** String keys, supported JSON values, finite numbers, reject `set`/unsupported objects, depth limit.
   - [x] **4. from_dict Error Contract:** Input type validated; invalid/missing/type errors normalized to `ValueError` with clear field/problem.
   - [x] **5. Unknown-key Rejection:** `load_config` and `from_dict` reject unknown keys with clear errors (`Result.from_dict` explicitly ignores computed `overall_passed` only, to preserve tamper resistance/round-trip).
+- **Git state (corrected):** committed/pushed to `origin/main` as `0d83e1b` (`Complete M2: Basic Runner and Task Completion Evaluation`) with explicit approval; `src/agentlab/agentlab.lnk` excluded.
 - **Course unlock:** TBD
 
-### M3: Tool selection and execution `[PLANNED]`
-- [ ] Mock tool framework in `tools/`
-- [ ] Record every tool call as an Event
-- [ ] Scenarios in `scenarios/tool_use/`
-- [ ] Evaluators for tool choice and tool arguments
+### M3: Tool selection and execution `[COMPLETED in working tree; not committed or pushed]` *(159 tests OK, 2026-11-09)*
+- [x] Mock tool framework in `tools/` (`src/agentlab/tools/`; deterministic stdlib-only mocks, no network/files/real commands)
+- [x] Record every tool call as Events: `TOOL_CALL` attempt + `TOOL_RESULT` (`status=ok|error|denied`). `Scenario.allowed_tools` enforced before execution; disallowed attempts record `TOOL_CALL`, do **not** execute tool, record denied `TOOL_RESULT` (`reason="tool_not_allowed"`). Missing allowlist (`allowed_tools=None`) denies execution by default (P5). Duplicate tool registration rejected (P9.C).
+- [x] Scenarios in `scenarios/tool_use/` (`calculator_success.json`: allowed tool + correct args; `disallowed_tool_failure.json`: disallowed attempt denied/not executed)
+- [x] Evaluators for tool choice and tool arguments (`ToolChoiceEvaluator`, `ToolArgsEvaluator`); evaluate saved `Run` only (no rerun), require `RunStatus.COMPLETED`, include `evidence_event_ids`. P1: if `expected_tool` is specified but absent from `TOOL_CALL` events, `ToolArgsEvaluator` fails and never compares args from a different tool. P9.B: stricter `call_id` binding where applicable.
+- [x] Batch Agent contract preserved (`execute(scenario) -> list[Event]`); `BasicRunner` scope unchanged (in-process, post-execution checks only). P2/P3/P4 remediations applied (safe invalid returns, deterministic bounded system IDs, all violations preserved with approved status precedence).
+- [x] `TaskCompletionEvaluator` conservative completion-evidence rule (P6): task restatement/start alone does not prove completion.
+- [x] `SampleAgent` tool trace labeled scripted/simulated, not registry-dispatched (P7).
+- [x] Plain-text report includes `evidence_event_ids` for `Result` scores (P9.A).
+- [x] Docs aligned to actual implementation; broken `docs/*` links fixed/removed without creating a docs system (P8). `app.py`/`agent.py`/`test.py` not modified/deleted/moved.
+- [x] M3 + audit regression tests added/updated; full suite **156 tests OK** (`python -X dev -W error -m unittest discover -s tests`, 2026-11-08).
+- [x] **M3 closure:** implementation and audit remediations reviewed; full suite passes (159 tests). No Git staging/commit/push performed. **P9.D `scenarios_dir` tightening remains deferred** (separate approval required; compatibility risk).
 - **Course unlock:** TBD
 
 ### M4: MCP integration and permissions `[PLANNED]`
@@ -135,9 +149,9 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
 - [ ] Keep status labels honest across all docs
 - [ ] Add or update tests for new logic
 - [ ] Update `ARCHITECTURE.md` when design changes
-- [ ] Add a decision record for every new dependency or major choice
-- [ ] Re-check security and privacy rules (`docs/security-and-privacy.md`)
-- [ ] Update `docs/learning-log.md`
+- [ ] Add a factual decision record for every new dependency or major choice (`DECISIONS.md`)
+- [ ] Re-check security/privacy claims against actual implementation (no sandbox/MCP/hard-timeout claims unless implemented)
+- [ ] Update `TOOLS_LOG.md` / course notes in `TASKS.md` as appropriate (old `docs/` learning-log/security files are not present)
 
 ---
 
@@ -149,6 +163,6 @@ This is the **living to-do list** of AgentLab. It changes as the project grows a
    2. Tell Claude Code what the course covered (Claude should **not** guess).
    3. Decide together which milestones it unlocks and fill in **Course unlock**.
    4. Add or adjust tasks.
-   5. Add an entry to `docs/learning-log.md`.
+   5. Record factual course/milestone notes in `TASKS.md` or `DECISIONS.md` as appropriate (old `docs/learning-log.md` is not present).
 3. **When plans change:** edit the tasks here, then update `PROJECT_PLAN.md` if the change is big.
 4. Update the **Last updated** date at the top.

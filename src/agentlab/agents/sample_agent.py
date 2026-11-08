@@ -1,8 +1,11 @@
 """Deterministic sample agent for M2.
 
-Produces fixed, predictable events. It reads Scenario.metadata["expected_output"]
+Produces fixed, predictable scripted events. It reads Scenario.metadata["expected_output"]
 when present to produce verifiable output evidence, but does not hardcode the
 evaluator's logic or scenario-specific values outside the scenario data.
+
+Note: TOOL_CALL/TOOL_RESULT events emitted here are a scripted/simulated trace for the
+M2 sample flow, not actual tool execution dispatched through MockToolRegistry.
 """
 
 from __future__ import annotations
@@ -41,14 +44,24 @@ class SampleAgent(Agent):
                 timestamp=self._ts(2),
                 type=EventType.TOOL_CALL,
                 content={"tool": "complete_task", "input": {"task": scenario.task}},
-                metadata={"agent_id": self.agent_id, "step": 2},
+                metadata={
+                    "agent_id": self.agent_id,
+                    "step": 2,
+                    "trace_kind": "scripted_demo",
+                    "registry_dispatched": False,
+                },
             ),
             Event(
                 id=f"{scenario.id}-evt-003",
                 timestamp=self._ts(3),
                 type=EventType.TOOL_RESULT,
                 content={"tool": "complete_task", "status": "ok", "output": output_text},
-                metadata={"agent_id": self.agent_id, "step": 3},
+                metadata={
+                    "agent_id": self.agent_id,
+                    "step": 3,
+                    "trace_kind": "scripted_demo",
+                    "registry_dispatched": False,
+                },
             ),
             Event(
                 id=f"{scenario.id}-evt-004",

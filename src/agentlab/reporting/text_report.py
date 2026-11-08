@@ -1,4 +1,4 @@
-"""Simple text report for M2 evaluation results."""
+"""Simple text report for evaluation results."""
 
 from __future__ import annotations
 
@@ -27,7 +27,9 @@ def render_text_report(run: Run, *, score: Score | None = None, result: Result |
         lines.append(f"Result ID:    {result.id}")
         lines.append(f"Overall:      {'PASS' if result.overall_passed else 'FAIL'}")
         for s in result.scores:
-            lines.append(f"- [{ 'PASS' if s.passed else 'FAIL' }] {s.evaluator_name} value={s.value}: {s.reason}")
+            lines.append(f"- [{'PASS' if s.passed else 'FAIL'}] {s.evaluator_name} value={s.value}: {s.reason}")
+            if s.evidence_event_ids:
+                lines.append(f"  evidence: {', '.join(s.evidence_event_ids)}")
     elif score is not None:
         lines.append("Evaluation")
         lines.append("-" * 40)

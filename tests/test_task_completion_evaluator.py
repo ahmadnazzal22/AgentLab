@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from agentlab.agents.sample_agent import SampleAgent
-from agentlab.core.models import RunStatus, Scenario
+from agentlab.core.models import Event, EventType, Run, RunStatus, Scenario
 from agentlab.evaluators import TaskCompletionEvaluator
 from agentlab.runner import BasicRunner
 
@@ -58,6 +58,102 @@ class TestTaskCompletionEvaluator(unittest.TestCase):
         score = self.evaluator.evaluate(run, scen)
         self.assertTrue(score.passed)
         self.assertIn("CUSTOM_TOKEN_123", score.metadata["expected_output"])
+
+    def test_fails_when_expected_output_appears_only_in_task_restatement(self) -> None:
+        expected = "Hello, world!"
+        run = Run(
+            id="run-restate",
+            scenario_id="scen-restate",
+            agent_id="agent",
+            started_at="2026-01-01T00:00:00Z",
+            ended_at="2026-01-01T00:00:01Z",
+            status=RunStatus.COMPLETED,
+            scenario_snapshot={
+                "id": "scen-restate",
+                "task": f"Please output: {expected}",
+                "metadata": {"expected_output": expected},
+            },
+            events=[
+                Event(
+                    id="e1",
+                    timestamp="2026-01-01T00:00:00Z",
+                    type=EventType.AGENT_MESSAGE,
+                    content={"role": "assistant", "message": f"Starting task: Please output: {expected}"},
+                    metadata={"step": 1},
+                ),
+                Event(
+                    id="e2",
+                    timestamp="2026-01-01T00:00:01Z",
+                    type=EventType.AGENT_MESSAGE,
+                    content={"role": "assistant", "message": "I will try."},
+                    metadata={"step": 2},
+                ),
+            ],
+        )
+        score = self.evaluator.evaluate(run)
+        self.assertFalse(score.passed)
+        self.assertTrue(score.evidence_event_ids)  # shows where text was seen
+        self.assertIn("completion", score.reason.lower() + " " + "restatement")
+
+    def test_fails_when_ordinary_message_repeats_expected_output(self) -> None:
+        expected = "Hello, world!"
+        run = Run(
+            id="run-ordinary-repeat",
+            scenario_id="scen-ordinary-repeat",
+            agent_id="agent",
+            started_at="2026-01-01T00:00:00Z",
+            ended_at="2026-01-01T00:00:01Z",
+            status=RunStatus.COMPLETED,
+            scenario_snapshot={
+                "id": "scen-ordinary-repeat",
+                "metadata": {"expected_output": expected},
+            },
+            events=[
+                Event(
+                    id="ordinary-message",
+                    timestamp="2026-01-01T00:00:01Z",
+                    type=EventType.AGENT_MESSAGE,
+                    content={"role": "assistant", "message": f"The requested output is {expected}."},
+                    metadata={"step": 1},
+                ),
+            ],
+        )
+
+        score = self.evaluator.evaluate(run)
+
+        self.assertFalse(score.passed)
+        self.assertEqual(score.evidence_event_ids, ["ordinary-message"])
+        self.assertIn("completion evidence", score.reason.lower())
+
+    def test_passes_when_expected_output_in_final_agent_message(self) -> None:
+        expected = "Hello, world!"
+        run = Run(
+            id="run-final",
+            scenario_id="scen-final",
+            agent_id="agent",
+            started_at="2026-01-01T00:00:00Z",
+            ended_at="2026-01-01T00:00:01Z",
+            status=RunStatus.COMPLETED,
+            scenario_snapshot={"id": "scen-final", "metadata": {"expected_output": expected}},
+            events=[
+                Event(
+                    id="e1",
+                    timestamp="2026-01-01T00:00:00Z",
+                    type=EventType.AGENT_MESSAGE,
+                    content={"role": "assistant", "message": "Starting task"},
+                    metadata={"step": 1},
+                ),
+                Event(
+                    id="e2",
+                    timestamp="2026-01-01T00:00:01Z",
+                    type=EventType.AGENT_MESSAGE,
+                    content={"role": "assistant", "message": expected, "output": expected},
+                    metadata={"step": 2, "final": True},
+                ),
+            ],
+        )
+        score = self.evaluator.evaluate(run)
+        self.assertTrue(score.passed)
 
 
 if __name__ == "__main__":

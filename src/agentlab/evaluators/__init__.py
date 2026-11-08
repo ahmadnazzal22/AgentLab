@@ -1,5 +1,7 @@
-"""Evaluators for AgentLab M2."""
+"""Evaluators for AgentLab."""
 
 from .task_completion import TaskCompletionEvaluator
+from .tool_args import ToolArgsEvaluator
+from .tool_choice import ToolChoiceEvaluator
 
-__all__ = ["TaskCompletionEvaluator"]
+__all__ = ["TaskCompletionEvaluator", "ToolArgsEvaluator", "ToolChoiceEvaluator"]

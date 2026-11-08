@@ -1,7 +1,7 @@
 # PROJECT_PLAN.md: Long-Term Roadmap
 
-> **Status of this document:** A plan with some work in progress.
-> Phase 0 done. Phase 1 (core models and configuration) is provisionally complete in code/tests (documentation corrections in progress). Everything else is `[PLANNED]` and may change as you learn more.
+> **Status of this document:** Roadmap with implementation progress.
+> Phase 0 done. Phase 1 and Phase 2 are implemented (M1/M2 committed and pushed). Phase 3 scope (tool selection/execution evaluation, mock tools, tool evaluators) is implemented and audit-remediated in the working tree (**156 tests passing, 2026-11-08**) but **not committed/closed**. Other phases remain `[PLANNED]` and may change. Current implementation is in-process and scope-limited: no real MCP, sandbox isolation, subprocess/Docker execution, hard timeout interruption, persistence layer, or cost evaluation.
 
 ---
 
@@ -58,21 +58,22 @@ Each phase has a goal, what it delivers, and what must come first. Course unlock
 - **Delivers:** Folder structure, core documentation, Git initialized, security/privacy principles written down.
 - **Not included:** Any application logic.
 
-### Phase 1: Core models and configuration `[IN PROGRESS]` (code/tests provisionally complete; docs under correction)
+### Phase 1: Core models and configuration `[IMPLEMENTED]` (M1, committed/pushed)
 - **Goal:** Define the shared vocabulary of the system.
-- **Delivers:** Clear data shapes for a Scenario, a Run, an Event (something the agent did), a Result, and a Score; basic configuration handling with security hardening.
+- **Delivered:** Data shapes for Scenario, Run, Event, Result, and Score; configuration handling with security hardening.
 - **Depends on:** Phase 0.
 - **Course unlock:** TBD
 
-### Phase 2: Basic runner and task-completion evaluation `[PLANNED]`
+### Phase 2: Basic runner and task-completion evaluation `[IMPLEMENTED]` (M2, committed/pushed)
 - **Goal:** Run one simple agent through one simple scenario and score whether it finished the task.
-- **Delivers:** A minimal runner, a sample agent, a first evaluator, and a first scenario in `scenarios/task_completion/`.
+- **Delivered (scope-limited):** `BasicRunner` (in-process, batch, post-execution checks only), deterministic `SampleAgent`, `scenarios/task_completion/hello_world.json`, `TaskCompletionEvaluator` (saved `Run` only), and plain-text report.
 - **Depends on:** Phase 1.
 - **Course unlock:** TBD
 
-### Phase 3: Tool selection and execution `[PLANNED]`
+### Phase 3: Tool selection and execution `[IMPLEMENTED in working tree, not closed]` (M3 + audit remediations)
 - **Goal:** Judge *how* the agent used tools, not just the final answer.
-- **Delivers:** Mock tools, recording of every tool call, evaluators for correct tool choice and correct arguments.
+- **Delivered (scope-limited):** Deterministic stdlib-only mock tools (`src/agentlab/tools/`), `MockToolRegistry` with allowlist enforcement before execution (deny-by-default when allowlist is missing), `ToolUsingAgent`, `TOOL_CALL`/`TOOL_RESULT` evidence (including denied/not-executed disallowed attempts), `ToolChoiceEvaluator` and `ToolArgsEvaluator` (saved `Run` only, `COMPLETED` required, `evidence_event_ids`), and `scenarios/tool_use/` success/failure cases. Audit remediations improved runner safety, evaluator correctness/binding, task-completion evidence conservatism, scripted-trace labeling, and reporting evidence.
+- **Not delivered:** Real MCP, sandbox/subprocess/Docker isolation, hard timeout interruption, persistence, cost/performance evaluation.
 - **Depends on:** Phase 2.
 - **Course unlock:** TBD
 
@@ -139,4 +140,4 @@ The project is on track when:
 
 - After each new course, review this plan with Claude Code and update phases or priorities.
 - Changes to the plan are reflected in `TASKS.md`.
-- Major shifts are recorded in `docs/decisions/`.
+- Major shifts and evidenced decisions are recorded in `DECISIONS.md`. (The old `docs/decisions/` directory is not present in this repository tree; do not create a new docs system without approval.)

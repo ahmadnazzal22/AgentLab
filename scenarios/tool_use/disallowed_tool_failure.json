@@ -1,0 +1,19 @@
+{
+  "id": "tool-disallowed-failure",
+  "name": "Tool Use Failure: Disallowed Tool Attempt",
+  "description": "M3 scenario: agent attempts a tool not in allowed_tools; attempt must be denied and not executed.",
+  "task": "Add 2 and 3. The correct tool is calculator_add, but the agent wrongly attempts echo_text.",
+  "allowed_tools": ["calculator_add"],
+  "max_steps": 10,
+  "timeout_seconds": 5.0,
+  "metadata": {
+    "category": "tool_use",
+    "tool_call": {
+      "name": "echo_text",
+      "args": {"text": "2+3"}
+    },
+    "expected_tool": "calculator_add",
+    "expected_args": {"a": 2, "b": 3},
+    "expected_failure": "tool_not_allowed"
+  }
+}
